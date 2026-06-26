@@ -1,0 +1,3 @@
+[submodule "building-blocks"]
+	path = building-blocks
+	url = https://github.com/ibm-self-serve-assets/building-blocks.git

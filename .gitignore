@@ -1,0 +1,24 @@
+# Python virtual environments
+.venv/
+python/.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Sensitive environment files
+.env
+python/.env
+orchestrate/.env
+
+# Terraform sensitive variables and state
+terraform/terraform.tfvars
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+
+# Generated sample data (contains timestamps; regenerate before each run)
+python/sample-transactions.json
+
+# Bob internal
+.bob/
