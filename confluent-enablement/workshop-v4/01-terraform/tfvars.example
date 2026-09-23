@@ -1,0 +1,8 @@
+api_key    = "YOUR_CONFLUENT_CLOUD_API_KEY"
+api_secret = "YOUR_CONFLUENT_CLOUD_API_SECRET"
+
+environment_name = "workshop-yourname"   # change to something unique — e.g. workshop-alice
+cluster_name     = "player-risk-cluster"
+region           = "us-east-1"
+cloud_provider   = "AWS"
+flink_max_cfu    = 5

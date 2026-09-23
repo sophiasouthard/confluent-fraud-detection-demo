@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build with Bob — Real-Time Streaming Workshop v4</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-main: #181c24;
+    --bg-surface: #222734;
+    --bg-card: #282e3e;
+    --bg-subtle: #1e232f;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border: #384256;
+    --border-strong: #4f5d79;
+    --primary: #818cf8;
+    --primary-bg: #232846;
+    --primary-border: #4f5894;
+    --purple: #c084fc;
+    --purple-bg: #2d2048;
+    --purple-border: #6d459e;
+    --blue: #38bdf8;
+    --blue-bg: #152b44;
+    --blue-border: #285e8a;
+    --green: #4ade80;
+    --green-bg: #163326;
+    --green-border: #266b47;
+    --amber: #fbbf24;
+    --amber-bg: #352914;
+    --amber-border: #7c5c24;
+    --red: #f87171;
+    --red-bg: #38191e;
+    --red-border: #7e2d36;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.25);
+    --shadow-md: 0 4px 10px rgba(0,0,0,0.35);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .deck { width: 100vw; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 24px 44px 76px;
+    background: var(--bg-main);
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+
+  .nav {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 100;
+    background: #1e2430;
+    border: 1px solid var(--border-strong);
+    border-radius: 9999px;
+    padding: 6px 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .nav-btn {
+    background: none; border: none; color: var(--text-secondary);
+    cursor: pointer; font-size: 18px; padding: 6px 12px;
+    border-radius: 6px; font-weight: 700; transition: all 0.15s ease;
+  }
+  .nav-btn:hover { color: #fff; background: var(--primary-bg); }
+  .nav-counter { font-size: 14.5px; color: var(--text-secondary); font-weight: 700; min-width: 68px; text-align: center; }
+
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 5px;
+    background: linear-gradient(90deg, #818cf8, #38bdf8, #c084fc);
+    transition: width 0.25s ease; z-index: 200;
+  }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 9999px; font-size: 13px;
+    font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase;
+    margin-bottom: 10px; align-self: flex-start;
+  }
+  .chip.bob    { background: var(--purple-bg); border: 1px solid var(--purple-border); color: #e9d5ff; }
+  .chip.module { background: var(--blue-bg);   border: 1px solid var(--blue-border);   color: #bae6fd; }
+  .chip.prereq { background: var(--amber-bg);  border: 1px solid var(--amber-border);  color: #fde68a; }
+  .chip.tip    { background: var(--green-bg);  border: 1px solid var(--green-border);  color: #bbf7d0; }
+  .chip.warn   { background: var(--red-bg);    border: 1px solid var(--red-border);    color: #fecaca; }
+
+  h1.hero { font-size: 44px; font-weight: 800; line-height: 1.15; color: #fff; margin-bottom: 12px; letter-spacing: -0.5px; }
+  h1.hero .purple { color: #d8b4fe; }
+  h1.hero .accent { color: #93c5fd; }
+  h2.slide-title { font-size: 28px; font-weight: 800; line-height: 1.2; color: #fff; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .lead { font-size: 16px; color: #e2e8f0; line-height: 1.55; margin-bottom: 16px; max-width: 900px; }
+  .sublabel { font-size: 13px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+  .cols { display: grid; gap: 16px; flex: 1; align-items: start; }
+  .cols-2     { grid-template-columns: 1fr 1fr; }
+  .cols-3     { grid-template-columns: 1fr 1fr 1fr; }
+  .cols-60-40 { grid-template-columns: 60fr 40fr; }
+  .cols-40-60 { grid-template-columns: 40fr 60fr; }
+
+  .card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow-sm); }
+  .card.blue   { border-color: var(--blue-border);   background: var(--blue-bg); }
+  .card.purple { border-color: var(--purple-border); background: var(--purple-bg); }
+  .card.green  { border-color: var(--green-border);  background: var(--green-bg); }
+  .card.orange { border-color: var(--amber-border);  background: var(--amber-bg); }
+  .card-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .card-body  { font-size: 14px; color: #cbd5e1; line-height: 1.6; }
+  .card-body strong { color: #fff; }
+
+  .prompt-box {
+    background: #251d38; border: 1.5px solid #8b5cf6;
+    border-left: 5px solid #c084fc; border-radius: 10px;
+    padding: 14px 16px; margin: 10px 0; box-shadow: var(--shadow-md);
+  }
+  .prompt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .prompt-label  { font-size: 13.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #e9d5ff; display: flex; align-items: center; gap: 6px; }
+  .prompt-action-tag { font-size: 12px; font-weight: 800; background: #3c2466; color: #f3e8ff; padding: 3px 10px; border-radius: 9999px; border: 1px solid #9333ea; }
+  .prompt-text {
+    font-size: 14.5px; color: #fff; font-weight: 500; line-height: 1.6;
+    font-family: "SF Mono", "Fira Code", Monaco, Menlo, Consolas, monospace;
+    background: #150f24; padding: 12px 14px; border-radius: 8px;
+    border: 1px solid #7e22ce; user-select: all; word-break: break-word;
+  }
+  .prompt-detail { font-size: 13.5px; color: #cbd5e1; margin-top: 8px; line-height: 1.55; }
+  .prompt-detail strong { color: #f8fafc; }
+
+  .outcome-box {
+    background: #0f2018; border: 1.5px solid var(--green-border);
+    border-left: 5px solid var(--green); border-radius: 10px;
+    padding: 12px 16px; margin: 8px 0;
+  }
+  .outcome-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #86efac; margin-bottom: 6px; }
+  .outcome-text  { font-size: 13.5px; color: #d1fae5; line-height: 1.55; }
+  .outcome-text strong { color: #fff; }
+
+  .code-block {
+    background: #0f131a; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; font-family: "SF Mono", "Fira Code", Monaco, Menlo, Consolas, monospace;
+    font-size: 13px; line-height: 1.65; color: #f8fafc; margin: 8px 0;
+  }
+  .code-block .cmt { color: #94a3b8; font-style: italic; }
+  .code-block .kw  { color: #fb7185; font-weight: 700; }
+  .code-block .str { color: #7dd3fc; }
+  .code-block .num { color: #c084fc; }
+  .code-block .hi  { color: #4ade80; font-weight: 800; }
+
+  .flow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+  .flow-node { border-radius: 8px; padding: 10px 16px; text-align: center; border: 1px solid var(--border-strong); background: var(--bg-surface); min-width: 125px; }
+  .flow-node.purple { border-color: var(--purple-border); background: var(--purple-bg); }
+  .flow-node.blue   { border-color: var(--blue-border);   background: var(--blue-bg); }
+  .flow-node.green  { border-color: var(--green-border);  background: var(--green-bg); }
+  .fn-label { font-size: 14px; font-weight: 800; color: #fff; }
+  .fn-sub   { font-size: 12px; color: #cbd5e1; margin-top: 2px; }
+  .flow-arrow { color: #94a3b8; font-size: 16px; font-weight: 800; }
+
+  .arch-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .arch-lane { display: flex; align-items: center; gap: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; }
+  .arch-badge { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 4px; flex-shrink: 0; }
+  .arch-badge.ingest { background: var(--blue-bg);   color: #7dd3fc; border: 1px solid var(--blue-border); }
+  .arch-badge.stream { background: var(--purple-bg); color: #d8b4fe; border: 1px solid var(--purple-border); }
+  .arch-badge.action { background: var(--green-bg);  color: #86efac; border: 1px solid var(--green-border); }
+  .arch-content { font-size: 13.5px; color: #e2e8f0; display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap; }
+  .arch-pill { background: #181d26; border: 1px solid var(--border-strong); padding: 3px 10px; border-radius: 4px; font-family: "SF Mono", monospace; font-size: 13px; color: #fff; font-weight: 700; }
+
+  .callout { border-radius: 8px; padding: 11px 14px; display: flex; gap: 12px; align-items: flex-start; font-size: 13.5px; line-height: 1.55; }
+  .callout.info { background: var(--blue-bg);   border: 1px solid var(--blue-border);   color: #bae6fd; }
+  .callout.warn { background: var(--amber-bg);  border: 1px solid var(--amber-border);  color: #fde68a; }
+  .callout.good { background: var(--green-bg);  border: 1px solid var(--green-border);  color: #bbf7d0; }
+  .callout strong { color: #fff; }
+  .ci { font-size: 16px; line-height: 1.2; }
+
+  .check-row { display: flex; gap: 10px; align-items: flex-start; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5; }
+  .check-row strong { color: #fff; }
+  .ck { font-size: 15px; line-height: 1.2; flex-shrink: 0; }
+
+  .steps { list-style: none; padding: 0; }
+  .steps li { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; font-size: 12px; font-weight: 800; background: var(--primary); color: #fff; }
+  .step-num.purple { background: var(--purple); }
+  .step-num.green  { background: var(--green); }
+  .step-num.amber  { background: var(--amber); }
+  .step-content { font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; padding-top: 1px; }
+  .step-content strong { color: #fff; }
+  .step-content .note { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+  .module-banner { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .mb-num { width: 36px; height: 36px; border-radius: 8px; background: var(--primary); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .mb-num.purple { background: var(--purple); }
+  .mb-title { font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; }
+  .mb-sub   { font-size: 13.5px; color: var(--text-muted); }
+
+  details summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: #93c5fd; user-select: none; margin-top: 8px; }
+  details summary:hover { color: #fff; }
+  details[open] summary { margin-bottom: 6px; color: #fff; }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  .tag.new   { background: #166534; color: #bbf7d0; border: 1px solid var(--green-border); }
+  .tag.fixed { background: #1e3a5f; color: #bae6fd; border: 1px solid var(--blue-border); }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="pb"></div>
+<div class="deck" id="deck">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 1 · Title                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide active">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+      <div class="chip bob">Build with Bob · v4 Prompt-Driven Workshop</div>
+      <h1 class="hero">
+        Real-Time Streaming<br>
+        <span class="purple">Orchestrated by IBM Bob</span>
+      </h1>
+      <p class="lead">
+        No copy-pasting shell commands. Direct <strong>IBM Bob</strong> with plain English to provision Confluent Cloud infrastructure, stream live casino betting events, compute real-time Flink risk alerts, and deploy an autonomous AI action agent.
+      </p>
+      <div class="flow">
+        <div class="flow-node purple"><div class="fn-label">You Prompt Bob</div><div class="fn-sub">Natural Language</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node purple"><div class="fn-label">Bob Runs IaC</div><div class="fn-sub">Terraform / .env</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node blue"><div class="fn-label">Confluent Cloud</div><div class="fn-sub">Kafka + Flink SQL</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node purple"><div class="fn-label">Bob MCP</div><div class="fn-sub">Live Stream Chat</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node green"><div class="fn-label">watsonx Agent</div><div class="fn-sub">Autonomous Action</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:18px;max-width:700px;">
+        <div class="check-row" style="font-size:12px;padding:6px 8px;"><span class="ck">🟣</span><div><strong>Mod 1:</strong> Provision</div></div>
+        <div class="check-row" style="font-size:12px;padding:6px 8px;"><span class="ck">🐍</span><div><strong>Mod 2:</strong> Stream</div></div>
+        <div class="check-row" style="font-size:12px;padding:6px 8px;"><span class="ck">⚡</span><div><strong>Mod 3:</strong> Flink SQL</div></div>
+        <div class="check-row" style="font-size:12px;padding:6px 8px;"><span class="ck">💬</span><div><strong>Mod 4:</strong> Chat</div></div>
+        <div class="check-row" style="font-size:12px;padding:6px 8px;"><span class="ck">🤖</span><div><strong>Mod 5:</strong> Agent</div></div>
+      </div>
+      <div style="margin-top:14px;font-size:12px;color:var(--text-muted);font-weight:600;">Use ← → arrow keys or bottom navigation · All modules have copyable prompt boxes</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 2 · Core Concepts                                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip module">Fundamentals · 2-Min Primer</div>
+    <h2 class="slide-title">What are Terraform, Kafka, Flink &amp; Confluent?</h2>
+    <p class="lead">Four technologies power this workshop. Here's what each one does in plain English — and how they fit together.</p>
+
+    <div class="cols cols-2" style="gap:14px;margin-bottom:12px;">
+      <div class="card purple">
+        <div class="card-title" style="color:var(--purple);">⚙️ Terraform <span style="font-size:12px;font-weight:500;color:var(--text-muted);">(The Builder)</span></div>
+        <div class="card-body">
+          <strong>What it is:</strong> Infrastructure as Code (IaC).<br>
+          <strong>Analogy:</strong> A robot architect. Instead of clicking 50 buttons in a web console, you write a text file describing what cloud resources you need and Terraform provisions them all automatically — and tears them all down with one command.
+        </div>
+      </div>
+      <div class="card blue">
+        <div class="card-title" style="color:var(--blue);">📬 Apache Kafka <span style="font-size:12px;font-weight:500;color:var(--text-muted);">(The Real-Time Highway)</span></div>
+        <div class="card-body">
+          <strong>What it is:</strong> A distributed streaming event log.<br>
+          <strong>Analogy:</strong> A never-ending conveyor belt for data. Applications publish events (e.g. <em>"Player A just bet $500"</em>) into categories called <strong>topics</strong>. Any number of consumers can read those events in real time without the publisher knowing.
+        </div>
+      </div>
+      <div class="card green">
+        <div class="card-title" style="color:var(--green);">⚡ Apache Flink <span style="font-size:12px;font-weight:500;color:var(--text-muted);">(The Live Brain)</span></div>
+        <div class="card-body">
+          <strong>What it is:</strong> A real-time stream processing engine.<br>
+          <strong>Analogy:</strong> A referee watching the conveyor belt. Flink runs SQL <em>continuously</em> on moving data — e.g. <em>"count bets per player per minute"</em> — and emits aggregated results instantly, before data ever lands in a database.
+        </div>
+      </div>
+      <div class="card orange">
+        <div class="card-title" style="color:var(--amber);">☁️ Confluent Cloud <span style="font-size:12px;font-weight:500;color:var(--text-muted);">(The Managed Platform)</span></div>
+        <div class="card-body">
+          <strong>What it is:</strong> Fully managed Kafka + Flink in the cloud.<br>
+          <strong>Analogy:</strong> The stadium that houses the conveyor belt and the referee. Confluent runs Kafka, Flink SQL, Schema Registry, and AI Context (RTCE) so you never manage servers.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="ci">💡</span>
+      <div><strong>How they work together today:</strong> <strong>Terraform</strong> deploys <strong>Confluent Cloud</strong>. Casino bets flow into <strong>Kafka</strong> topics. <strong>Flink SQL</strong> detects anomalies in real time. <strong>IBM Bob + AI Agents</strong> query the stream and take action.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 3 · Business Scenario & Architecture                             -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip module">Scenario &amp; Architecture</div>
+    <h2 class="slide-title">End-to-End Casino Risk Intelligence Pipeline</h2>
+    <p class="lead">Why real-time streaming matters here — and what we're building end-to-end.</p>
+
+    <div class="cols cols-40-60" style="gap:14px;">
+      <div>
+        <div class="sublabel">🎰 The Business Problem</div>
+        <div class="card orange" style="margin-bottom:10px;">
+          <div class="card-title" style="color:var(--amber);">Grand Horizon Casino: Real-Time Fraud Prevention</div>
+          <div class="card-body" style="font-size:13.5px;line-height:1.55;">
+            Casino games process thousands of wagers per second. Bad actors exploit bonus loops or rapidly place high-volume bets to launder funds — <em>before</em> nightly batch databases run.<br><br>
+            <strong>The Goal:</strong> Detect anomalous wagers (<em>&gt;20 bets or &gt;$10,000 in 60 seconds</em>) while the player is still at the table. Automatically suspend accounts or dispatch security in seconds — not hours.
+          </div>
+        </div>
+        <div class="card purple">
+          <div class="card-title" style="color:var(--purple);font-size:14.5px;">🤖 IBM Bob's Role Across Every Layer</div>
+          <div class="card-body" style="font-size:13px;line-height:1.6;">
+            • <strong>DevOps:</strong> Provisions Kafka, Flink, IAM via Terraform<br>
+            • <strong>Analyst:</strong> Explores live Kafka streams in natural language<br>
+            • <strong>Agent Builder:</strong> Deploys autonomous watsonx action workflows
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">🏛️ System Architecture</div>
+        <div class="arch-box" style="margin-bottom:12px;">
+          <div class="arch-lane">
+            <span class="arch-badge ingest">Ingest</span>
+            <div class="arch-content">
+              <span class="arch-pill">🎰 Casino Bets (Python producer)</span>
+              <span>──►</span>
+              <span class="arch-pill">topic: player_events</span>
+            </div>
+          </div>
+          <div class="arch-lane">
+            <span class="arch-badge stream">Process</span>
+            <div class="arch-content">
+              <span class="arch-pill">⚡ Flink SQL TUMBLE(1 MIN)</span>
+              <span>──►</span>
+              <span class="arch-pill">topic: player_risk_alerts</span>
+            </div>
+          </div>
+          <div class="arch-lane">
+            <span class="arch-badge action">Act</span>
+            <div class="arch-content">
+              <span class="arch-pill">🟣 Bob MCP Query</span>
+              <span style="color:var(--text-muted);font-weight:700;">+</span>
+              <span class="arch-pill">🤖 watsonx Agent</span>
+              <span>──►</span>
+              <span style="font-size:12px;color:var(--green);font-weight:800;">[Suspend / Radio / Compliance]</span>
+            </div>
+          </div>
+        </div>
+        <div class="sublabel">Workshop Module Map</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🟣</span><div><strong>Mod 1:</strong> Provision cloud infra</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🐍</span><div><strong>Mod 2:</strong> Stream casino bets</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">⚡</span><div><strong>Mod 3:</strong> Flink SQL deep-dive</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">💬</span><div><strong>Mod 4:</strong> Chat with live stream</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🤖</span><div><strong>Mod 5:</strong> Autonomous agent</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🧹</span><div><strong>Teardown:</strong> One-prompt cleanup</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 4 · Flink SQL Deep-Dive  ★ NEW in v4                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip module">Module 3 Preview <span class="tag new">NEW in v4</span></div>
+    <h2 class="slide-title">Understand the Flink Detection Job Before It Deploys</h2>
+    <p class="lead">Terraform will deploy this Flink SQL in Module 1. Reading it first means you'll understand exactly what's running in the cloud — not just that something is running.</p>
+
+    <div class="cols cols-60-40" style="gap:14px;">
+      <div>
+        <div class="sublabel">The Risk Detection Query</div>
+        <div class="code-block" style="font-size:12.5px;line-height:1.55;">
+          <span class="kw">INSERT INTO</span> player_risk_alerts<br>
+          <span class="kw">SELECT</span><br>
+          &nbsp;&nbsp;player_id,<br>
+          &nbsp;&nbsp;<span class="kw">CAST</span>(window_start <span class="kw">AS</span> TIMESTAMP(3)) <span class="kw">AS</span> window_start,<br>
+          &nbsp;&nbsp;<span class="kw">CAST</span>(window_end &nbsp;&nbsp;<span class="kw">AS</span> TIMESTAMP(3)) <span class="kw">AS</span> window_end,<br>
+          &nbsp;&nbsp;<span class="kw">COUNT</span>(*) <span class="kw">AS</span> bet_count,<br>
+          &nbsp;&nbsp;<span class="kw">SUM</span>(amount) <span class="kw">AS</span> total_wagered,<br>
+          &nbsp;&nbsp;<span class="kw">AVG</span>(amount) <span class="kw">AS</span> avg_bet,<br>
+          &nbsp;&nbsp;(<span class="kw">COUNT</span>(*) &gt; <span class="num">20</span> <span class="kw">OR SUM</span>(amount) &gt; <span class="num">10000</span>) <span class="kw">AS</span> is_flagged<br>
+          <span class="kw">FROM</span> TUMBLE(<br>
+          &nbsp;&nbsp;<span class="kw">TABLE</span> player_events,<br>
+          &nbsp;&nbsp;DESCRIPTOR(<span class="hi">$rowtime</span>), <span class="cmt">-- Confluent's built-in row-time</span><br>
+          &nbsp;&nbsp;INTERVAL <span class="str">'1'</span> MINUTE<br>
+          )<br>
+          <span class="hi">GROUP BY window_start, window_end, player_id;</span>
+        </div>
+        <div class="prompt-box" style="margin-top:8px;">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt Bob in Module 3</div>
+            <span class="prompt-action-tag">SQL Analysis</span>
+          </div>
+          <div class="prompt-text">Explain the Flink SQL statements in 03-flink/. Specifically, explain why we use $rowtime, why TUMBLE window requires DISTRIBUTED BY HASH(player_id), and how the 1-minute tumbling window flags players with over 20 bets or over $10,000 wagered.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sublabel">Three Things to Understand Now</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="card blue" style="padding:12px 14px;">
+            <div class="card-title" style="color:var(--blue);font-size:14px;">⏱ Why $rowtime?</div>
+            <div class="card-body" style="font-size:13px;">Flink needs a <em>time column</em> to define windows. <code>$rowtime</code> is Confluent's built-in row-time attribute — always the right type, always monotonically increasing. <code>PROCTIME()</code> is <strong>not supported</strong> in Confluent Cloud.</div>
+          </div>
+          <div class="card purple" style="padding:12px 14px;">
+            <div class="card-title" style="color:var(--purple);font-size:14px;">🔀 Why HASH(player_id)?</div>
+            <div class="card-body" style="font-size:13px;"><code>DISTRIBUTED BY HASH(player_id)</code> routes all bets from the same player to the same partition — but keeps <code>player_id</code> as a normal queryable value column. <code>DISTRIBUTED BY (player_id)</code> would make it a Kafka key, breaking <code>GROUP BY</code> in the TUMBLE output.</div>
+          </div>
+          <div class="card green" style="padding:12px 14px;">
+            <div class="card-title" style="color:var(--green);font-size:14px;">🪟 What is a tumbling window?</div>
+            <div class="card-body" style="font-size:13px;">A fixed, non-overlapping time bucket. Every 60 seconds, Flink seals the current bucket and computes aggregates. One row is written to <code>player_risk_alerts</code> per player per window — with <code>is_flagged=true</code> if thresholds were exceeded.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 5 · Setup 1: Cloud Credentials                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip prereq">Setup 1 of 2 · Cloud Credentials</div>
+    <h2 class="slide-title">Confluent Cloud &amp; IBM Bob Setup</h2>
+    <p class="lead">Get your Confluent Cloud API key ready. You'll hand it directly to Bob on the next slide — no manual config file editing needed.</p>
+
+    <div class="cols cols-2" style="gap:14px;">
+      <div>
+        <div class="sublabel">Required Accounts</div>
+        <div class="check-row" style="margin-bottom:6px;">
+          <span class="ck">☁️</span>
+          <div><strong>Confluent Cloud:</strong> Log in at <a href="https://confluent.cloud" style="color:var(--blue);font-weight:600;">confluent.cloud</a>. New accounts get $400 free credits — enough for the full workshop.</div>
+        </div>
+        <div class="check-row" style="margin-bottom:6px;">
+          <span class="ck">🟣</span>
+          <div><strong>IBM Bob Workspace:</strong> Open the <code>workshop-v4</code> folder in Bob. All prompts in this deck reference files relative to that folder.</div>
+        </div>
+        <div class="check-row">
+          <span class="ck">🤖</span>
+          <div><strong>watsonx Orchestrate:</strong> An active tenant or sandbox environment for Module 5. You can complete Modules 1–4 without it.</div>
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">Create a Cloud API Key</div>
+        <div class="card orange" style="padding:12px 14px;">
+          <ul class="steps" style="margin:0;">
+            <li><span class="step-num amber">1</span><div class="step-content">In Confluent Cloud, click your avatar (top-right) → <strong>Cloud API keys</strong></div></li>
+            <li><span class="step-num amber">2</span><div class="step-content">Click <strong>Add key</strong> → Select <strong>Global access</strong> → <strong>Next</strong></div></li>
+            <li><span class="step-num amber">3</span><div class="step-content">Copy both the <strong>Key</strong> and <strong>Secret</strong> to a safe place</div></li>
+          </ul>
+          <div class="callout warn" style="margin-top:6px;padding:6px 10px;font-size:12px;">
+            <span class="ci">⚠️</span>
+            <div>The secret is shown <strong>once only</strong>. Copy it now — you'll pass it to Bob on the Module 1 slide.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 6 · Setup 2: Prereq Verification                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip prereq">Setup 2 of 2 · Environment Verification</div>
+    <h2 class="slide-title">Verify Your Environment with Bob</h2>
+    <p class="lead">Before provisioning anything, let Bob check all dependencies and prepare the Python environment. Every ✅ means you're ready to run.</p>
+
+    <div class="cols cols-60-40" style="gap:14px;">
+      <div>
+        <div class="prompt-box">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt IBM Bob</div>
+            <span class="prompt-action-tag">Setup &amp; Diagnostics</span>
+          </div>
+          <div class="prompt-text">Check all prerequisites for this workshop (Terraform, Python 3.9+, Node.js v22+, and Orchestrate CLI). Then create the Python virtual environment in 02-producer and install its requirements.txt. Give me a summary table of tool versions and readiness.</div>
+          <div class="prompt-detail">
+            <strong>What Bob does:</strong> Runs version checks for all 4 tools, creates <code>02-producer/.venv</code>, runs <code>pip install -r requirements.txt</code>, and returns a readiness table.<br>
+            <strong>What you'll understand:</strong> Which tools are installed and which need action before you continue.
+          </div>
+        </div>
+        <div class="outcome-box">
+          <div class="outcome-label">✅ Expected Outcome</div>
+          <div class="outcome-text">A table showing Terraform ✅, Python ✅, Node.js ✅, and either Orchestrate CLI ✅ or a clear install command if missing. The venv will be ready for Module 2.</div>
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">Manual Fallback</div>
+        <div class="code-block" style="font-size:11.5px;">
+          <span class="cmt"># Run the verification script</span><br>
+          chmod +x 00-prereqs/verify.sh<br>
+          ./00-prereqs/verify.sh<br><br>
+          <span class="cmt"># Setup producer venv manually</span><br>
+          cd 02-producer<br>
+          python3 -m venv .venv<br>
+          source .venv/bin/activate<br>
+          pip install -r requirements.txt
+        </div>
+        <div class="callout warn" style="margin-top:8px;">
+          <span class="ci">⚠️</span>
+          <div><strong>Orchestrate CLI</strong> is only needed for Module 5. You can skip it for now and install it before that module.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 7 · Module 1: Terraform Provisioning                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="module-banner">
+      <div class="mb-num">1</div>
+      <div>
+        <div class="mb-title">Module 1 — Provision Your Confluent Cloud Infrastructure</div>
+        <div class="mb-sub">Bob writes <code>terraform.tfvars</code> from your credentials, runs <code>terraform apply</code>, and reports all outputs</div>
+      </div>
+    </div>
+
+    <div class="cols cols-60-40" style="gap:14px;">
+      <div>
+        <div class="prompt-box">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt IBM Bob</div>
+            <span class="prompt-action-tag">Infrastructure as Code</span>
+          </div>
+          <div class="prompt-text">Here are my Confluent Cloud credentials:
+API Key: &lt;YOUR_API_KEY&gt;
+API Secret: &lt;YOUR_API_SECRET&gt;
+Environment Name: workshop-&lt;yourname&gt;
+
+Please create 01-terraform/terraform.tfvars with these values, initialize Terraform, and run terraform apply. Once applied, print a clear summary of all outputs including bootstrap servers, cluster ID, and Schema Registry URL.</div>
+          <div class="prompt-detail">
+            <strong>What Bob deploys (you just read the Flink SQL on Slide 4 — this is what runs it):</strong> Confluent environment, Standard Kafka cluster, Flink compute pool (5 CFU), Schema Registry, 3 API key pairs, 2 Kafka topics, and the Flink risk detection job — plus auto-writes <code>02-producer/.env</code>.<br>
+            <strong>What you'll understand:</strong> Every resource ID and endpoint you'll use for the rest of the workshop.
+          </div>
+        </div>
+        <div class="callout warn" style="margin-top:6px;">
+          <span class="ci">⏱️</span>
+          <div><strong>Takes ~3–4 minutes.</strong> RBAC propagation adds a 30s pause; Flink compute pool allocation takes the rest. Bob monitors until complete.</div>
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">Resources Created (19 total)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">☁️</span><div>Environment</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🗄️</span><div>Standard Cluster</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">⚡</span><div>Flink Pool (5 CFU)</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">📋</span><div>Schema Registry</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🔑</span><div>3 API Key Pairs</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">📄</span><div>Auto .env file</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">📦</span><div>2 Kafka Topics</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">⚙️</span><div>Flink Risk Job</div></div>
+        </div>
+        <details>
+          <summary>Manual CLI Commands</summary>
+          <div class="code-block" style="font-size:11px;">
+            cd 01-terraform<br>
+            cp tfvars.example terraform.tfvars<br>
+            <span class="cmt"># Edit terraform.tfvars with your credentials</span><br>
+            terraform init<br>
+            terraform apply -auto-approve
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 8 · Module 1b: Enable RTCE in UI                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip warn">Module 1 · One Manual UI Step</div>
+    <h2 class="slide-title">Enable RTCE — The AI Context Layer for Module 5</h2>
+    <p class="lead">RTCE (Real-Time Context Engine) turns your Kafka topics into a live, AI-queryable context window. It's how the watsonx Orchestrate agent in Module 5 reads the risk stream — <em>without writing a single Kafka consumer</em>. Confluent doesn't yet expose RTCE in Terraform, so this one step is manual.</p>
+
+    <div class="cols cols-2" style="gap:14px;">
+      <div>
+        <div class="sublabel">5 Steps in Confluent Cloud UI</div>
+        <ul class="steps">
+          <li><span class="step-num">1</span><div class="step-content">Open your cluster (<code>workshop-yourname</code>) in <a href="https://confluent.cloud" style="color:var(--blue);">confluent.cloud</a></div></li>
+          <li><span class="step-num">2</span><div class="step-content">In the left sidebar, find and click <strong>RTCE</strong> (Real-Time Context Engine)</div></li>
+          <li><span class="step-num">3</span><div class="step-content">Click <strong>Enable RTCE</strong></div></li>
+          <li><span class="step-num">4</span><div class="step-content">Click <strong>Add Topics</strong> → select <code>player_events</code> and <code>player_risk_alerts</code> → Save</div></li>
+          <li><span class="step-num">5</span><div class="step-content">Copy the <strong>MCP Endpoint URL</strong> shown on the RTCE page — you'll need it for Module 5</div></li>
+        </ul>
+        <div class="callout info" style="margin-top:8px;">
+          <span class="ci">💡</span>
+          <div>RTCE exposes your topics as an MCP (Model Context Protocol) server. Any AI agent that speaks MCP can query your live Kafka data as natural-language context — no Kafka SDK needed.</div>
+        </div>
+      </div>
+      <div>
+        <div class="prompt-box">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Save the RTCE Endpoint with Bob</div>
+            <span class="prompt-action-tag">State Storage</span>
+          </div>
+          <div class="prompt-text">Here is my Confluent RTCE MCP Endpoint URL:
+&lt;PASTE_RTCE_URL_HERE&gt;
+
+Store this endpoint in my environment so we can use it when deploying the watsonx Orchestrate agent in Module 5.</div>
+          <div class="prompt-detail">
+            <strong>What Bob does:</strong> Writes the URL to <code>05-rtce-agent/.env</code> and appends it to <code>02-producer/.env</code> so it's available for the agent deploy step later.<br>
+            <strong>What you'll understand:</strong> Where credentials live and how Bob keeps state across modules.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 9 · Module 2: Start Live Event Streaming                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="module-banner">
+      <div class="mb-num">2</div>
+      <div>
+        <div class="mb-title">Module 2 — Start Live Casino Event Streaming</div>
+        <div class="mb-sub">Bob validates credentials, fires a guaranteed high-risk batch, then starts a continuous ~2 events/sec background stream</div>
+      </div>
+    </div>
+
+    <div class="cols cols-60-40" style="gap:14px;">
+      <div>
+        <div class="prompt-box">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt 1 — Burst of Test Events</div>
+            <span class="prompt-action-tag">Producer Management</span>
+          </div>
+          <div class="prompt-text">Verify that 02-producer/.env has valid Kafka credentials. Then run generate_sample_data.py to immediately populate the player_events topic with realistic test betting patterns (both high-risk and normal players). Show me the summary of produced records.</div>
+          <div class="prompt-detail">
+            <strong>What Bob does:</strong> Validates all 6 credentials in <code>.env</code>, generates 30 events timestamped to land in the next complete Flink window (25 × $600 bets for PLAYER-RISK-01, 5 normal players), produces them to Kafka, and confirms delivery.<br>
+            <strong>What you'll understand:</strong> How the producer authenticates and how events map to Flink's detection thresholds.
+          </div>
+        </div>
+
+        <div class="prompt-box" style="margin-top:8px;">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt 2 — Continuous Background Stream</div>
+            <span class="prompt-action-tag">Background Producer</span>
+          </div>
+          <div class="prompt-text">Start produce_player_events.py in the background to simulate a continuous live stream of casino betting events at ~2 events per second.</div>
+          <div class="prompt-detail"><strong>What you'll understand:</strong> The producer runs unattended, 80% risk players / 20% normal, at exactly 2/sec. Flink alerts will appear in <code>player_risk_alerts</code> within 60 seconds.</div>
+        </div>
+      </div>
+      <div>
+        <div class="callout good" style="margin-bottom:10px;">
+          <span class="ci">⚡</span>
+          <div><strong>Flink is already running from Module 1.</strong> The detection job started the moment Terraform applied. Your events will trigger real alerts within the next complete 1-minute window.</div>
+        </div>
+        <div class="sublabel">Verify in Confluent Cloud UI</div>
+        <div class="card blue" style="font-size:13px;margin-bottom:8px;">
+          Go to <strong>Topics</strong> → <code>player_events</code> → <strong>Messages</strong>.<br>
+          You'll see live JSON messages with <code>player_id</code>, <code>amount</code>, <code>game_type</code>, and <code>event_time</code>.<br><br>
+          After ~60 seconds: <strong>Topics</strong> → <code>player_risk_alerts</code> → <strong>Messages</strong> — risk records appear here as each window closes.
+        </div>
+        <details>
+          <summary>Manual CLI Fallback</summary>
+          <div class="code-block" style="font-size:11px;">
+            cd 02-producer<br>
+            source .venv/bin/activate<br>
+            python generate_sample_data.py<br>
+            python produce_player_events.py \<br>
+            &nbsp;&nbsp;--sample-file player_events_sample.json
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 10 · Module 4: Configure Bob MCP                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="module-banner">
+      <div class="mb-num">4</div>
+      <div>
+        <div class="mb-title">Module 4 — Give Bob Direct Access to Your Live Kafka Stream</div>
+        <div class="mb-sub">Bob self-configures <code>mcp-confluent</code> from Terraform state and registers itself as a live Kafka query tool</div>
+      </div>
+    </div>
+
+    <div class="cols cols-60-40" style="gap:14px;">
+      <div>
+        <div class="prompt-box">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt IBM Bob</div>
+            <span class="prompt-action-tag">Automated MCP Config</span>
+          </div>
+          <div class="prompt-text">Read the Terraform outputs from 01-terraform/ and configure 04-mcp-bob/config.yaml with the real REST endpoint, cluster ID, Kafka API credentials, and Schema Registry credentials. Check that the YAML formatting uses spaces only. Then show me the JSON block to paste into Bob's MCP Settings.</div>
+          <div class="prompt-detail">
+            <strong>What Bob does:</strong> Reads live <code>terraform output -json</code>, writes <code>04-mcp-bob/config.yaml</code> with real values, validates no tabs are present, computes the absolute path, and outputs the exact JSON for Bob MCP settings.<br>
+            <strong>What you'll understand:</strong> How MCP servers are configured and how Bob connects to external data sources.
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px;padding:12px 14px;font-size:13.5px;">
+          <strong>Activate in Bob:</strong> Open Bob Settings (⚙️) → <strong>MCP Servers</strong> → paste the JSON block Bob generated. Bob hot-reloads on save — no restart needed.
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">What the MCP Config Wires Up</div>
+        <div class="code-block" style="font-size:12px;">
+          {<br>
+          &nbsp;&nbsp;<span class="str">"mcp-confluent"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"command"</span>: <span class="str">"npx"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"args"</span>: [<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"-y"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"@confluentinc/mcp-confluent"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"--config"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"/absolute/path/config.yaml"</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;]<br>
+          &nbsp;&nbsp;}<br>
+          }
+        </div>
+        <div class="callout info" style="margin-top:8px;font-size:13px;">
+          <span class="ci">💡</span>
+          <div>Once connected, Bob gains <code>listTopics</code>, <code>getMetadata</code>, and <code>queryData</code> as native tools — the next slide uses all three.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 11 · Module 4b: Chat with Live Stream                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip bob">Module 4 · Live Stream Exploration</div>
+    <h2 class="slide-title">Chat with Your Live Kafka Stream</h2>
+    <p class="lead">With <code>mcp-confluent</code> active, Bob can query your live topics directly. No Kafka SDK. No consumer groups. Just English.</p>
+
+    <div class="cols cols-2" style="gap:14px;">
+      <div>
+        <div class="sublabel">Run These Prompts in Bob's Chat</div>
+        <div class="prompt-box" style="margin-bottom:6px;">
+          <div class="prompt-header"><div class="prompt-label">🟣 Query 1 — Discover Topics</div></div>
+          <div class="prompt-text">List all Kafka topics in my Confluent cluster and describe the schema of player_risk_alerts.</div>
+          <div class="prompt-detail">Bob calls <code>listTopics</code> then <code>getMetadata</code> and explains every field.</div>
+        </div>
+        <div class="prompt-box" style="margin-bottom:6px;">
+          <div class="prompt-header"><div class="prompt-label">🟣 Query 2 — Inspect Live Alerts</div></div>
+          <div class="prompt-text">Query the player_risk_alerts topic and show me the latest 10 messages. Which players are flagged as high risk (is_flagged = true)?</div>
+          <div class="prompt-detail">Bob calls <code>queryData</code> on the live topic and surfaces the flagged players by name.</div>
+        </div>
+        <div class="prompt-box">
+          <div class="prompt-header"><div class="prompt-label">🟣 Query 3 — Real-Time Analytics</div></div>
+          <div class="prompt-text">Across the alerts topic, which player has the highest total wagered amount? Summarise their bet count and average bet size.</div>
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">Under the Hood: MCP Tool Calls</div>
+        <div class="card blue" style="padding:12px 14px;margin-bottom:8px;">
+          <div class="card-title" style="color:var(--blue);">Watch Bob's Reasoning Trace</div>
+          <div class="card-body">
+            Expand <strong>Show Reasoning</strong> in Bob to see the live tool call sequence:
+            <ul style="margin:8px 0 0 18px;font-family:monospace;font-size:13px;color:var(--text-secondary);">
+              <li>→ listTopics(connection="workshop-cluster")</li>
+              <li>→ getMetadata(topic="player_risk_alerts")</li>
+              <li>→ queryData(topic="player_risk_alerts", limit=10)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout good">
+          <span class="ci">✓</span>
+          <div>Zero Kafka client code to write. Zero consumer offsets to manage. Bob queries the live streaming data plane directly via the MCP protocol.</div>
+        </div>
+        <div class="callout info" style="margin-top:8px;">
+          <span class="ci">💡</span>
+          <div><strong>Extension prompt:</strong> <em>"Write a new Flink SQL query that flags VIP fraud: a player betting more than $5,000 across fewer than 3 bets in a 2-minute hop window."</em></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 12 · Module 5: Deploy Orchestrate Agent                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="module-banner">
+      <div class="mb-num purple">5</div>
+      <div>
+        <div class="mb-title">Module 5 — Deploy the Autonomous Casino Risk Agent</div>
+        <div class="mb-sub">Bob registers the RTCE MCP toolkit, imports the Python action tools, and deploys the watsonx Orchestrate agent in one prompt</div>
+      </div>
+    </div>
+
+    <div class="cols cols-60-40" style="gap:14px;">
+      <div>
+        <div class="prompt-box">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt IBM Bob</div>
+            <span class="prompt-action-tag">Agent ADK Deployment</span>
+          </div>
+          <div class="prompt-text">Deploy our watsonx Orchestrate casino risk agent:
+1. Configure the Confluent Cloud connection using Kafka credentials from 01-terraform/
+2. Register the RTCE MCP toolkit using our stored RTCE endpoint URL
+3. Import the Python action toolkit in 05-rtce-agent/player_risk_toolkit/
+4. Import the player risk agent YAML: 05-rtce-agent/player_risk_agent.agent.yaml</div>
+          <div class="prompt-detail">
+            <strong>What Bob does:</strong> Runs <code>orchestrate connections</code>, <code>orchestrate toolkits add</code>, <code>orchestrate tools import</code>, and <code>orchestrate agents import</code> in sequence.<br>
+            <strong>What you'll understand:</strong> How an AI agent is composed from MCP data tools + Python action tools + a YAML behaviour spec.
+          </div>
+        </div>
+
+        <div class="sublabel" style="margin-top:12px;">Test Prompts in Orchestrate Chat</div>
+        <div class="card purple" style="padding:14px 16px;font-size:13.5px;">
+          <ul class="steps" style="margin:0;">
+            <li><span class="step-num purple">1</span><div class="step-content"><strong>"List all players currently flagged in the player_risk_alerts stream"</strong><div class="note">Agent calls listTopics + queryData, surfaces flagged players</div></div></li>
+            <li><span class="step-num purple">2</span><div class="step-content"><strong>"Investigate player PLAYER-RISK-01 for suspicious activity"</strong><div class="note">Triggers suspend_player + notify_host(RADIO) + escalate_to_compliance(CRITICAL)</div></div></li>
+            <li><span class="step-num purple">3</span><div class="step-content"><strong>"What is the risk status of PLAYER-NORMAL-01?"</strong><div class="note">Normal activity confirmed — no suspension, log only</div></div></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">Governed Action Matrix</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+          <div class="check-row" style="border-color:var(--red-border);">
+            <span class="ck">🚨</span>
+            <div><strong>CRITICAL:</strong> is_flagged=true AND bet_count &gt; 20 → Suspend + Radio + Compliance Audit</div>
+          </div>
+          <div class="check-row" style="border-color:var(--amber-border);">
+            <span class="ck">⚠️</span>
+            <div><strong>ELEVATED:</strong> is_flagged=true AND bet_count 10–20 → Flag + Email Host + High Priority Case</div>
+          </div>
+          <div class="check-row" style="border-color:var(--green-border);">
+            <span class="ck">✅</span>
+            <div><strong>LOW:</strong> is_flagged=false → Precautionary flag only, no escalation</div>
+          </div>
+        </div>
+        <details>
+          <summary>Manual Orchestrate CLI Commands</summary>
+          <div class="code-block" style="font-size:11px;">
+            orchestrate toolkits add \<br>
+            &nbsp;&nbsp;--kind mcp --name player-risk-stream \<br>
+            &nbsp;&nbsp;--url &lt;RTCE_URL&gt; \<br>
+            &nbsp;&nbsp;--transport streamable_http \<br>
+            &nbsp;&nbsp;--tools "*" --app-id confluent-cloud<br><br>
+            orchestrate tools import \<br>
+            &nbsp;&nbsp;--kind python \<br>
+            &nbsp;&nbsp;--file 05-rtce-agent/player_risk_toolkit/player_risk_actions.py \<br>
+            &nbsp;&nbsp;--package-root 05-rtce-agent/player_risk_toolkit<br><br>
+            orchestrate agents import \<br>
+            &nbsp;&nbsp;-f 05-rtce-agent/player_risk_agent.agent.yaml
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 13 · Teardown                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip bob">Workshop Complete 🎉</div>
+    <h2 class="slide-title">Mission Accomplished — One-Prompt Teardown</h2>
+    <p class="lead">You built and operated a complete real-time streaming AI pipeline using IBM Bob as the single orchestrator across IaC, data streaming, live MCP queries, and autonomous action agents. Now tear it all down before it costs you anything.</p>
+
+    <div class="cols cols-60-40" style="gap:14px;">
+      <div>
+        <div class="prompt-box">
+          <div class="prompt-header">
+            <div class="prompt-label">🟣 Prompt IBM Bob for Teardown</div>
+            <span class="prompt-action-tag">Safe Cloud Teardown</span>
+          </div>
+          <div class="prompt-text">The workshop is finished! Please run terraform destroy in 01-terraform/ with auto-approve to clean up all Confluent Cloud clusters, Flink pools, topics, and API keys so I do not incur cloud charges.</div>
+          <div class="prompt-detail"><strong>What Bob does:</strong> Runs <code>terraform destroy -auto-approve</code>, which removes all 19 Confluent Cloud resources — environment, cluster, Flink pool, topics, Schema Registry subjects, API keys, and role bindings.</div>
+        </div>
+        <div class="callout good" style="margin-top:10px;">
+          <span class="ci">🎉</span>
+          <div><strong>Key Takeaway:</strong> IBM Bob acted as the single control plane across infrastructure provisioning, data streaming, live analytics queries, and autonomous AI agent deployment — all from natural language prompts.</div>
+        </div>
+      </div>
+      <div>
+        <div class="sublabel">What You Built Today</div>
+        <div class="card purple" style="padding:14px 16px;">
+          <div class="card-body">
+            <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;">
+              <li>✅ <strong>Terraform IaC provisioning</strong> — 19 cloud resources from a single prompt</li>
+              <li>✅ <strong>Live Kafka event producer</strong> — ~2 events/sec with realistic risk patterns</li>
+              <li>✅ <strong>Flink SQL tumbling-window pipeline</strong> — 1-min risk aggregation running continuously</li>
+              <li>✅ <strong>Natural language Kafka queries</strong> — via Bob MCP, zero SDK code</li>
+              <li>✅ <strong>Governed autonomous agent</strong> — suspend, notify, and escalate based on live stream data</li>
+            </ul>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="sublabel">v4 Fixes Applied</div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="check-row" style="font-size:12px;padding:5px 10px;border-color:var(--blue-border);"><span class="ck">🔧</span><div>Flink SQL uses <code>$rowtime</code> (not PROCTIME)</div></div>
+            <div class="check-row" style="font-size:12px;padding:5px 10px;border-color:var(--blue-border);"><span class="ck">🔧</span><div>Slide order: Flink explained before Terraform deploys it</div></div>
+            <div class="check-row" style="font-size:12px;padding:5px 10px;border-color:var(--blue-border);"><span class="ck">🔧</span><div>Producer schema matches registered SR format</div></div>
+            <div class="check-row" style="font-size:12px;padding:5px 10px;border-color:var(--blue-border);"><span class="ck">🔧</span><div>RTCE context added before it's needed in Module 5</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<div class="nav">
+  <button class="nav-btn" id="prev">&#8592;</button>
+  <span class="nav-counter" id="counter">1 / 13</span>
+  <button class="nav-btn" id="next">&#8594;</button>
+</div>
+
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+  const pb = document.getElementById('pb');
+
+  function go(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, slides.length - 1));
+    slides[cur].classList.add('active');
+    counter.textContent = (cur + 1) + ' / ' + slides.length;
+    pb.style.width = ((cur + 1) / slides.length * 100) + '%';
+  }
+
+  document.getElementById('prev').addEventListener('click', () => go(cur - 1));
+  document.getElementById('next').addEventListener('click', () => go(cur + 1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') go(cur + 1);
+    else if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+
+  go(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "_comment": "Paste this into IBM Bob: Settings → MCP Servers → Add MCP Server. Replace the path with your absolute path to config.yaml. Bob can generate this JSON for you — see the Module 4 prompt in index.html.",
+  "mcp-confluent": {
+    "type": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "@confluentinc/mcp-confluent",
+      "--config",
+      "/ABSOLUTE/PATH/TO/workshop-v4/04-mcp-bob/config.yaml"
+    ],
+    "alwaysAllow": [
+      "listTopics",
+      "getMetadata",
+      "queryData"
+    ]
+  }
+}

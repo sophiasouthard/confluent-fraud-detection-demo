@@ -1,0 +1,2 @@
+# No external dependencies needed for the action toolkit
+# All tools use Python standard library only (uuid, datetime)

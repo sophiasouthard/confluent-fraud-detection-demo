@@ -1,0 +1,22 @@
+# ── Secrets / credentials ─────────────────────────────────────────────────────
+config.yaml
+.env
+*.env
+
+# Terraform state & vars (may contain plaintext secrets after apply)
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform/
+.terraform.lock.hcl
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store

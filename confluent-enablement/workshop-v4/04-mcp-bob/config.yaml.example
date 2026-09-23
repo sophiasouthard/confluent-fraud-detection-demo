@@ -1,0 +1,45 @@
+# mcp-confluent config for IBM Bob — Module 4
+# ─────────────────────────────────────────────────────────────────────────────
+# HOW TO USE:
+#   1. Complete Module 1 (terraform apply) to provision your cluster
+#   2. Copy this file:  cp config.yaml.example config.yaml
+#   3. Fill in ALL <PLACEHOLDER> values using:  cd ../01-terraform && terraform output
+#   4. Wire into Bob — see the prompt on the Module 4 slide in index.html
+#
+# WHERE TO GET EACH VALUE:
+#   rest_endpoint    →  terraform output kafka_bootstrap_servers
+#                       → prefix with https:// and replace :9092 with :443
+#   cluster_id       →  terraform output cluster_id
+#   kafka key/secret →  terraform output -raw kafka_api_key
+#                       terraform output -raw kafka_api_secret
+#   SR endpoint      →  terraform output schema_registry_url
+#   SR key/secret    →  terraform output -raw schema_registry_api_key
+#                       terraform output -raw schema_registry_api_secret
+#
+# YAML RULES (common failure cause):
+#   - Use SPACES only — no tabs anywhere
+#   - Indentation must match exactly (2 spaces per level)
+#   - No extra spaces before/after quotes
+#
+# This file is gitignored — never commit config.yaml with real credentials.
+# ─────────────────────────────────────────────────────────────────────────────
+
+connections:
+  workshop-cluster:
+    type: confluent_cloud
+    description: "My workshop Confluent Cloud cluster"
+
+    kafka:
+      rest_endpoint: "https://<KAFKA_BOOTSTRAP_HOST>:443"
+      cluster_id: "<CLUSTER_ID>"
+      auth:
+        type: api_key
+        key: "<KAFKA_API_KEY>"
+        secret: "<KAFKA_API_SECRET>"
+
+    schema_registry:
+      endpoint: "<SCHEMA_REGISTRY_URL>"
+      auth:
+        type: api_key
+        key: "<SR_API_KEY>"
+        secret: "<SR_API_SECRET>"
