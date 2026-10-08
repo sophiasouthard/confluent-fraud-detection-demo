@@ -258,7 +258,86 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- SLIDE 2 · Core Concepts                                                -->
+  <!-- SLIDE 2 · Agenda                                                       -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="chip bob">Workshop Agenda</div>
+    <h2 class="slide-title">What We're Doing Today</h2>
+    <p class="lead">Five hands-on modules. One AI assistant. A complete real-time risk pipeline — built entirely through natural language prompts to IBM Bob.</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px;">
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--amber);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">⚙</div>
+          <div style="width:2px;flex:1;background:var(--border);margin-top:4px;"></div>
+        </div>
+        <div class="card" style="margin-left:12px;margin-bottom:0;padding:12px 16px;">
+          <div class="card-title" style="font-size:15px;">Setup — Environment &amp; Credentials</div>
+          <div class="card-body">Verify Terraform, Python, Node.js, and Orchestrate CLI are ready. Create your Confluent Cloud API key. Bob checks everything and sets up the Python environment.</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--primary);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div style="width:2px;flex:1;background:var(--border);margin-top:4px;"></div>
+        </div>
+        <div class="card" style="margin-left:12px;margin-bottom:0;padding:12px 16px;">
+          <div class="card-title" style="font-size:15px;">Module 1 — Provision Confluent Cloud Infrastructure</div>
+          <div class="card-body">Give Bob your API key. Bob writes <code>terraform.tfvars</code>, runs <code>terraform apply</code>, and provisions a Kafka cluster, Flink compute pool, Schema Registry, topics, and the live risk detection job. Then enable RTCE in the UI for Module 5.</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--primary);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div style="width:2px;flex:1;background:var(--border);margin-top:4px;"></div>
+        </div>
+        <div class="card" style="margin-left:12px;margin-bottom:0;padding:12px 16px;">
+          <div class="card-title" style="font-size:15px;">Module 2 — Stream Live Casino Betting Events</div>
+          <div class="card-body">Bob validates Kafka credentials, fires a guaranteed high-risk batch into <code>player_events</code>, then starts a continuous ~2 events/sec background stream. Flink begins generating risk alerts within 60 seconds.</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--purple);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div style="width:2px;flex:1;background:var(--border);margin-top:4px;"></div>
+        </div>
+        <div class="card" style="margin-left:12px;margin-bottom:0;padding:12px 16px;">
+          <div class="card-title" style="font-size:15px;">Module 3 — Understand the Flink SQL Detection Pipeline</div>
+          <div class="card-body">Ask Bob to explain the <code>03-flink/</code> SQL files — how <code>$rowtime</code> drives the tumbling window, why <code>DISTRIBUTED BY HASH</code> matters, and exactly how the <code>is_flagged</code> rule works. Optionally author a custom detection rule.</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--primary);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+          <div style="width:2px;flex:1;background:var(--border);margin-top:4px;"></div>
+        </div>
+        <div class="card" style="margin-left:12px;margin-bottom:0;padding:12px 16px;">
+          <div class="card-title" style="font-size:15px;">Module 4 — Chat with Your Live Stream via Bob MCP</div>
+          <div class="card-body">Bob self-configures <code>mcp-confluent</code> from Terraform outputs and registers as a live Kafka query tool. Query topics, inspect schemas, and surface flagged players — all in plain English, zero SDK code.</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--purple);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</div>
+          <div style="width:2px;flex:1;background:var(--border);margin-top:4px;"></div>
+        </div>
+        <div class="card" style="margin-left:12px;padding:12px 16px;">
+          <div class="card-title" style="font-size:15px;">Module 5 — Deploy an Autonomous Risk Agent</div>
+          <div class="card-body">Bob registers the RTCE MCP toolkit and deploys the watsonx Orchestrate agent in one prompt. The agent reads live <code>player_risk_alerts</code> and autonomously suspends accounts, dispatches security, and files compliance cases.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SLIDE 3 · Core Concepts                                                -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div class="slide">
     <div class="chip module">Fundamentals · 2-Min Primer</div>
@@ -373,63 +452,6 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- SLIDE 4 · Flink SQL Deep-Dive  ★ NEW in v4                            -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <div class="slide">
-    <div class="chip module">Module 3 Preview <span class="tag new">NEW in v4</span></div>
-    <h2 class="slide-title">Understand the Flink Detection Job Before It Deploys</h2>
-    <p class="lead">Terraform will deploy this Flink SQL in Module 1. Reading it first means you'll understand exactly what's running in the cloud — not just that something is running.</p>
-
-    <div class="cols cols-60-40" style="gap:14px;">
-      <div>
-        <div class="sublabel">The Risk Detection Query</div>
-        <div class="code-block" style="font-size:12.5px;line-height:1.55;">
-          <span class="kw">INSERT INTO</span> player_risk_alerts<br>
-          <span class="kw">SELECT</span><br>
-          &nbsp;&nbsp;player_id,<br>
-          &nbsp;&nbsp;<span class="kw">CAST</span>(window_start <span class="kw">AS</span> TIMESTAMP(3)) <span class="kw">AS</span> window_start,<br>
-          &nbsp;&nbsp;<span class="kw">CAST</span>(window_end &nbsp;&nbsp;<span class="kw">AS</span> TIMESTAMP(3)) <span class="kw">AS</span> window_end,<br>
-          &nbsp;&nbsp;<span class="kw">COUNT</span>(*) <span class="kw">AS</span> bet_count,<br>
-          &nbsp;&nbsp;<span class="kw">SUM</span>(amount) <span class="kw">AS</span> total_wagered,<br>
-          &nbsp;&nbsp;<span class="kw">AVG</span>(amount) <span class="kw">AS</span> avg_bet,<br>
-          &nbsp;&nbsp;(<span class="kw">COUNT</span>(*) &gt; <span class="num">20</span> <span class="kw">OR SUM</span>(amount) &gt; <span class="num">10000</span>) <span class="kw">AS</span> is_flagged<br>
-          <span class="kw">FROM</span> TUMBLE(<br>
-          &nbsp;&nbsp;<span class="kw">TABLE</span> player_events,<br>
-          &nbsp;&nbsp;DESCRIPTOR(<span class="hi">$rowtime</span>), <span class="cmt">-- Confluent's built-in row-time</span><br>
-          &nbsp;&nbsp;INTERVAL <span class="str">'1'</span> MINUTE<br>
-          )<br>
-          <span class="hi">GROUP BY window_start, window_end, player_id;</span>
-        </div>
-        <div class="prompt-box" style="margin-top:8px;">
-          <div class="prompt-header">
-            <div class="prompt-label">🟣 Prompt Bob in Module 3</div>
-            <span class="prompt-action-tag">SQL Analysis</span>
-          </div>
-          <div class="prompt-text">Explain the Flink SQL statements in 03-flink/. Specifically, explain why we use $rowtime, why TUMBLE window requires DISTRIBUTED BY HASH(player_id), and how the 1-minute tumbling window flags players with over 20 bets or over $10,000 wagered.</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="sublabel">Three Things to Understand Now</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div class="card blue" style="padding:12px 14px;">
-            <div class="card-title" style="color:var(--blue);font-size:14px;">⏱ Why $rowtime?</div>
-            <div class="card-body" style="font-size:13px;">Flink needs a <em>time column</em> to define windows. <code>$rowtime</code> is Confluent's built-in row-time attribute — always the right type, always monotonically increasing. <code>PROCTIME()</code> is <strong>not supported</strong> in Confluent Cloud.</div>
-          </div>
-          <div class="card purple" style="padding:12px 14px;">
-            <div class="card-title" style="color:var(--purple);font-size:14px;">🔀 Why HASH(player_id)?</div>
-            <div class="card-body" style="font-size:13px;"><code>DISTRIBUTED BY HASH(player_id)</code> routes all bets from the same player to the same partition — but keeps <code>player_id</code> as a normal queryable value column. <code>DISTRIBUTED BY (player_id)</code> would make it a Kafka key, breaking <code>GROUP BY</code> in the TUMBLE output.</div>
-          </div>
-          <div class="card green" style="padding:12px 14px;">
-            <div class="card-title" style="color:var(--green);font-size:14px;">🪟 What is a tumbling window?</div>
-            <div class="card-body" style="font-size:13px;">A fixed, non-overlapping time bucket. Every 60 seconds, Flink seals the current bucket and computes aggregates. One row is written to <code>player_risk_alerts</code> per player per window — with <code>is_flagged=true</code> if thresholds were exceeded.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <!-- SLIDE 5 · Setup 1: Cloud Credentials                                  -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div class="slide">
@@ -454,16 +476,16 @@
         </div>
       </div>
       <div>
-        <div class="sublabel">Create a Cloud API Key</div>
+        <div class="sublabel">Get Environment ID &amp; API Key</div>
         <div class="card orange" style="padding:12px 14px;">
           <ul class="steps" style="margin:0;">
-            <li><span class="step-num amber">1</span><div class="step-content">In Confluent Cloud, click your avatar (top-right) → <strong>Cloud API keys</strong></div></li>
-            <li><span class="step-num amber">2</span><div class="step-content">Click <strong>Add key</strong> → Select <strong>Global access</strong> → <strong>Next</strong></div></li>
-            <li><span class="step-num amber">3</span><div class="step-content">Copy both the <strong>Key</strong> and <strong>Secret</strong> to a safe place</div></li>
+            <li><span class="step-num amber">1</span><div class="step-content">In Confluent Cloud, open your demo environment (e.g. <code>demos</code>) and copy the <strong>Environment ID</strong> (<code>env-xxxxxx</code>).</div></li>
+            <li><span class="step-num amber">2</span><div class="step-content">Create a Service Account with <strong>EnvironmentAdmin</strong> on that environment (or use a Cloud API key).</div></li>
+            <li><span class="step-num amber">3</span><div class="step-content">Generate an API key for that Service Account and copy both the <strong>Key</strong> and <strong>Secret</strong>.</div></li>
           </ul>
           <div class="callout warn" style="margin-top:6px;padding:6px 10px;font-size:12px;">
-            <span class="ci">⚠️</span>
-            <div>The secret is shown <strong>once only</strong>. Copy it now — you'll pass it to Bob on the Module 1 slide.</div>
+            <span class="ci">💡</span>
+            <div><strong>Least Privilege:</strong> Using a dedicated EnvironmentAdmin key avoids granting organization-wide access, allowing fully isolated ephemeral demo clusters!</div>
           </div>
         </div>
       </div>
@@ -536,32 +558,33 @@
             <span class="prompt-action-tag">Infrastructure as Code</span>
           </div>
           <div class="prompt-text">Here are my Confluent Cloud credentials:
+Environment ID: &lt;YOUR_ENVIRONMENT_ID&gt;
 API Key: &lt;YOUR_API_KEY&gt;
 API Secret: &lt;YOUR_API_SECRET&gt;
-Environment Name: workshop-&lt;yourname&gt;
+Cluster Name: player-risk-&lt;yourname&gt;
 
 Please create 01-terraform/terraform.tfvars with these values, initialize Terraform, and run terraform apply. Once applied, print a clear summary of all outputs including bootstrap servers, cluster ID, and Schema Registry URL.</div>
           <div class="prompt-detail">
-            <strong>What Bob deploys (you just read the Flink SQL on Slide 4 — this is what runs it):</strong> Confluent environment, Standard Kafka cluster, Flink compute pool (5 CFU), Schema Registry, 3 API key pairs, 2 Kafka topics, and the Flink risk detection job — plus auto-writes <code>02-producer/.env</code>.<br>
+            <strong>What Bob deploys (you just read the Flink SQL on Slide 4 — this is what runs it):</strong> Ephemeral Standard Kafka cluster, Flink compute pool (5 CFU), Schema Registry integration, 3 scoped API key pairs, 2 Kafka topics, and the Flink risk detection job inside your environment — plus auto-writes <code>02-producer/.env</code>.<br>
             <strong>What you'll understand:</strong> Every resource ID and endpoint you'll use for the rest of the workshop.
           </div>
         </div>
         <div class="callout warn" style="margin-top:6px;">
           <span class="ci">⏱️</span>
-          <div><strong>Takes ~3–4 minutes.</strong> RBAC propagation adds a 30s pause; Flink compute pool allocation takes the rest. Bob monitors until complete.</div>
+          <div><strong>Takes ~2–3 minutes.</strong> RBAC propagation adds a 30s pause; Flink compute pool allocation takes the rest. Bob monitors until complete.</div>
         </div>
       </div>
       <div>
-        <div class="sublabel">Resources Created (19 total)</div>
+        <div class="sublabel">Ephemeral Resources Created</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
-          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">☁️</span><div>Environment</div></div>
           <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🗄️</span><div>Standard Cluster</div></div>
           <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">⚡</span><div>Flink Pool (5 CFU)</div></div>
-          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">📋</span><div>Schema Registry</div></div>
-          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🔑</span><div>3 API Key Pairs</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">📋</span><div>Schema Registry Keys</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🔑</span><div>3 Scoped API Keys</div></div>
           <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">📄</span><div>Auto .env file</div></div>
           <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">📦</span><div>2 Kafka Topics</div></div>
           <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">⚙️</span><div>Flink Risk Job</div></div>
+          <div class="check-row" style="font-size:12.5px;padding:6px 10px;"><span class="ck">🛡️</span><div>Least-Privilege RBAC</div></div>
         </div>
         <details>
           <summary>Manual CLI Commands</summary>
@@ -873,7 +896,7 @@ Store this endpoint in my environment so we can use it when deploying the watson
             <span class="prompt-action-tag">Safe Cloud Teardown</span>
           </div>
           <div class="prompt-text">The workshop is finished! Please run terraform destroy in 01-terraform/ with auto-approve to clean up all Confluent Cloud clusters, Flink pools, topics, and API keys so I do not incur cloud charges.</div>
-          <div class="prompt-detail"><strong>What Bob does:</strong> Runs <code>terraform destroy -auto-approve</code>, which removes all 19 Confluent Cloud resources — environment, cluster, Flink pool, topics, Schema Registry subjects, API keys, and role bindings.</div>
+          <div class="prompt-detail"><strong>What Bob does:</strong> Runs <code>terraform destroy -auto-approve</code>, which cleanly removes all ephemeral demo resources — Kafka cluster, Flink pool, topics, Schema Registry subjects, API keys, and role bindings — leaving the persistent demo environment intact and zero lingering costs.</div>
         </div>
         <div class="callout good" style="margin-top:10px;">
           <span class="ci">🎉</span>

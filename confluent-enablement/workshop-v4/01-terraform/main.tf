@@ -36,9 +36,13 @@
 
 data "confluent_organization" "main" {}
 
+data "confluent_environment" "main" {
+  id = var.environment_id
+}
+
 data "confluent_schema_registry_cluster" "main" {
   environment {
-    id = confluent_environment.main.id
+    id = data.confluent_environment.main.id
   }
   depends_on = [confluent_kafka_cluster.main]
 }
@@ -48,15 +52,7 @@ data "confluent_flink_region" "main" {
   region = var.region
 }
 
-# ── Environment & Cluster ─────────────────────────────────────────────────────
-
-resource "confluent_environment" "main" {
-  display_name = var.environment_name
-
-  stream_governance {
-    package = "ESSENTIALS"
-  }
-}
+# ── Kafka Cluster (Ephemeral) ─────────────────────────────────────────────────
 
 resource "confluent_kafka_cluster" "main" {
   display_name = var.cluster_name
@@ -68,14 +64,14 @@ resource "confluent_kafka_cluster" "main" {
   standard {}
 
   environment {
-    id = confluent_environment.main.id
+    id = data.confluent_environment.main.id
   }
 }
 
 # ── Service Account & Role Bindings ───────────────────────────────────────────
 
 resource "confluent_service_account" "app" {
-  display_name = "${var.environment_name}-sa"
+  display_name = "${var.cluster_name}-sa"
   description  = "Service account for the player risk workshop pipeline"
 }
 
@@ -88,13 +84,13 @@ resource "confluent_role_binding" "kafka_admin" {
 resource "confluent_role_binding" "flink_developer" {
   principal   = "User:${confluent_service_account.app.id}"
   role_name   = "FlinkDeveloper"
-  crn_pattern = confluent_environment.main.resource_name
+  crn_pattern = data.confluent_environment.main.resource_name
 }
 
 resource "confluent_role_binding" "env_admin" {
   principal   = "User:${confluent_service_account.app.id}"
   role_name   = "EnvironmentAdmin"
-  crn_pattern = confluent_environment.main.resource_name
+  crn_pattern = data.confluent_environment.main.resource_name
 }
 
 # 30-second wait for RBAC to propagate before Flink statements are submitted.
@@ -111,7 +107,7 @@ resource "time_sleep" "wait_for_rbac" {
 # ── API Keys ──────────────────────────────────────────────────────────────────
 
 resource "confluent_api_key" "kafka_producer" {
-  display_name = "${var.environment_name}-kafka-key"
+  display_name = "${var.cluster_name}-kafka-key"
   description  = "Kafka API key for the player events producer"
 
   owner {
@@ -126,7 +122,7 @@ resource "confluent_api_key" "kafka_producer" {
     kind        = confluent_kafka_cluster.main.kind
 
     environment {
-      id = confluent_environment.main.id
+      id = data.confluent_environment.main.id
     }
   }
 
@@ -134,7 +130,7 @@ resource "confluent_api_key" "kafka_producer" {
 }
 
 resource "confluent_api_key" "schema_registry" {
-  display_name = "${var.environment_name}-sr-key"
+  display_name = "${var.cluster_name}-sr-key"
   description  = "Schema Registry API key"
 
   owner {
@@ -149,7 +145,7 @@ resource "confluent_api_key" "schema_registry" {
     kind        = data.confluent_schema_registry_cluster.main.kind
 
     environment {
-      id = confluent_environment.main.id
+      id = data.confluent_environment.main.id
     }
   }
 
@@ -157,7 +153,7 @@ resource "confluent_api_key" "schema_registry" {
 }
 
 resource "confluent_api_key" "flink" {
-  display_name = "${var.environment_name}-flink-key"
+  display_name = "${var.cluster_name}-flink-key"
   description  = "Flink API key for the player risk pipeline"
 
   owner {
@@ -172,7 +168,7 @@ resource "confluent_api_key" "flink" {
     kind        = data.confluent_flink_region.main.kind
 
     environment {
-      id = confluent_environment.main.id
+      id = data.confluent_environment.main.id
     }
   }
 
@@ -182,13 +178,13 @@ resource "confluent_api_key" "flink" {
 # ── Flink Compute Pool ────────────────────────────────────────────────────────
 
 resource "confluent_flink_compute_pool" "main" {
-  display_name = "${var.environment_name}-pool"
+  display_name = "${var.cluster_name}-pool"
   cloud        = var.cloud_provider
   region       = var.region
   max_cfu      = var.flink_max_cfu
 
   environment {
-    id = confluent_environment.main.id
+    id = data.confluent_environment.main.id
   }
 }
 
@@ -238,14 +234,14 @@ resource "confluent_kafka_topic" "player_risk_alerts" {
 
 resource "confluent_flink_statement" "drop_player_events" {
   organization { id = data.confluent_organization.main.id }
-  environment  { id = confluent_environment.main.id }
+  environment { id = data.confluent_environment.main.id }
   compute_pool { id = confluent_flink_compute_pool.main.id }
-  principal    { id = confluent_service_account.app.id }
+  principal { id = confluent_service_account.app.id }
 
   statement = "DROP TABLE IF EXISTS player_events;"
 
   properties = {
-    "sql.current-catalog"  = confluent_environment.main.display_name
+    "sql.current-catalog"  = data.confluent_environment.main.display_name
     "sql.current-database" = confluent_kafka_cluster.main.display_name
   }
 
@@ -264,14 +260,14 @@ resource "confluent_flink_statement" "drop_player_events" {
 
 resource "confluent_flink_statement" "drop_player_risk_alerts" {
   organization { id = data.confluent_organization.main.id }
-  environment  { id = confluent_environment.main.id }
+  environment { id = data.confluent_environment.main.id }
   compute_pool { id = confluent_flink_compute_pool.main.id }
-  principal    { id = confluent_service_account.app.id }
+  principal { id = confluent_service_account.app.id }
 
   statement = "DROP TABLE IF EXISTS player_risk_alerts;"
 
   properties = {
-    "sql.current-catalog"  = confluent_environment.main.display_name
+    "sql.current-catalog"  = data.confluent_environment.main.display_name
     "sql.current-database" = confluent_kafka_cluster.main.display_name
   }
 
@@ -290,9 +286,9 @@ resource "confluent_flink_statement" "drop_player_risk_alerts" {
 
 resource "confluent_flink_statement" "create_player_events" {
   organization { id = data.confluent_organization.main.id }
-  environment  { id = confluent_environment.main.id }
+  environment { id = data.confluent_environment.main.id }
   compute_pool { id = confluent_flink_compute_pool.main.id }
-  principal    { id = confluent_service_account.app.id }
+  principal { id = confluent_service_account.app.id }
 
   # Design notes:
   #   DISTRIBUTED BY HASH(player_id)  — value-only partitioning; keeps player_id as a queryable column
@@ -316,7 +312,7 @@ resource "confluent_flink_statement" "create_player_events" {
   SQL
 
   properties = {
-    "sql.current-catalog"  = confluent_environment.main.display_name
+    "sql.current-catalog"  = data.confluent_environment.main.display_name
     "sql.current-database" = confluent_kafka_cluster.main.display_name
   }
 
@@ -335,9 +331,9 @@ resource "confluent_flink_statement" "create_player_events" {
 
 resource "confluent_flink_statement" "create_player_risk_alerts" {
   organization { id = data.confluent_organization.main.id }
-  environment  { id = confluent_environment.main.id }
+  environment { id = data.confluent_environment.main.id }
   compute_pool { id = confluent_flink_compute_pool.main.id }
-  principal    { id = confluent_service_account.app.id }
+  principal { id = confluent_service_account.app.id }
 
   # Design notes:
   #   NO PRIMARY KEY  — append-only mode; PRIMARY KEY triggers MT_UPSERT_NOT_SUPPORTED
@@ -359,7 +355,7 @@ resource "confluent_flink_statement" "create_player_risk_alerts" {
   SQL
 
   properties = {
-    "sql.current-catalog"  = confluent_environment.main.display_name
+    "sql.current-catalog"  = data.confluent_environment.main.display_name
     "sql.current-database" = confluent_kafka_cluster.main.display_name
   }
 
@@ -378,9 +374,9 @@ resource "confluent_flink_statement" "create_player_risk_alerts" {
 
 resource "confluent_flink_statement" "player_risk_detection_job" {
   organization { id = data.confluent_organization.main.id }
-  environment  { id = confluent_environment.main.id }
+  environment { id = data.confluent_environment.main.id }
   compute_pool { id = confluent_flink_compute_pool.main.id }
-  principal    { id = confluent_service_account.app.id }
+  principal { id = confluent_service_account.app.id }
 
   # Design notes:
   #   DESCRIPTOR($rowtime)  — Confluent's built-in row-time attribute; PROCTIME() is not supported
@@ -405,7 +401,7 @@ resource "confluent_flink_statement" "player_risk_detection_job" {
   SQL
 
   properties = {
-    "sql.current-catalog"  = confluent_environment.main.display_name
+    "sql.current-catalog"  = data.confluent_environment.main.display_name
     "sql.current-database" = confluent_kafka_cluster.main.display_name
   }
 

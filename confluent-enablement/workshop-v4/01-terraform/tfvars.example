@@ -1,8 +1,15 @@
+# Confluent Cloud API Credentials
+# Recommended: Service Account API key with EnvironmentAdmin on the demo environment
+# (Or Cloud API Key with Global/Org Admin access)
 api_key    = "YOUR_CONFLUENT_CLOUD_API_KEY"
 api_secret = "YOUR_CONFLUENT_CLOUD_API_SECRET"
 
-environment_name = "workshop-yourname"   # change to something unique — e.g. workshop-alice
-cluster_name     = "player-risk-cluster"
-region           = "us-east-1"
-cloud_provider   = "AWS"
-flink_max_cfu    = 5
+# Persistent Demo/Workshop Environment ID (e.g. env-abc123)
+# Stream Governance (Essentials) should be enabled on this environment.
+environment_id = "env-xxxxxx"
+
+# Ephemeral Resource Configuration (Created & Destroyed with demo)
+cluster_name   = "player-risk-cluster"  # change to something unique if sharing env — e.g. player-risk-alice
+region         = "us-east-1"
+cloud_provider = "AWS"
+flink_max_cfu  = 5

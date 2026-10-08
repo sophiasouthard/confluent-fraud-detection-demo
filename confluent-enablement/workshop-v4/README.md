@@ -99,3 +99,4 @@ These are all documented in the source files but summarised here for facilitator
 4. **No `PRIMARY KEY` on `player_risk_alerts`** — PRIMARY KEY activates the upsert connector which returns `MT_UPSERT_NOT_SUPPORTED`.
 5. **Producer schema must match the Flink/Connect-registered schema** — nullable `oneOf` fields, `player_id` as message key (not value field), no `required` array.
 6. **Standard cluster tier required** — Basic clusters do not support RTCE.
+7. **Ephemeral Demos in Persistent Environments (Least Privilege)** — Pre-create a persistent environment with Stream Governance and grant a Service Account `EnvironmentAdmin` only on that environment. Terraform references the environment via `data "confluent_environment"` and creates/destroys all ephemeral resources (Kafka cluster, Flink pool, topics, API keys, Flink jobs) without requiring organization-wide `OrganizationAdmin` permissions.

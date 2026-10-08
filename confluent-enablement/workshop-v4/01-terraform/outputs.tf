@@ -34,7 +34,7 @@ output "schema_registry_api_secret" {
 
 output "environment_id" {
   description = "Confluent Cloud environment ID"
-  value       = confluent_environment.main.id
+  value       = data.confluent_environment.main.id
 }
 
 output "cluster_id" {
@@ -71,5 +71,5 @@ output "flink_compute_pool_id" {
 
 output "rtce_mcp_endpoint" {
   description = "RTCE MCP endpoint URL — use this in Module 5. NOTE: RTCE must be enabled manually in the Confluent Cloud UI first."
-  value       = "https://mcp.${var.region}.${lower(var.cloud_provider)}.confluent.cloud/mcp/v1/context-engine/organizations/${data.confluent_organization.main.id}/environments/${confluent_environment.main.id}/kafka-clusters/${confluent_kafka_cluster.main.id}"
+  value       = "https://mcp.${var.region}.${lower(var.cloud_provider)}.confluent.cloud/mcp/v1/context-engine/organizations/${data.confluent_organization.main.id}/environments/${data.confluent_environment.main.id}/kafka-clusters/${confluent_kafka_cluster.main.id}"
 }

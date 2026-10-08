@@ -1,5 +1,5 @@
 variable "api_key" {
-  description = "Confluent Cloud API Key (Cloud-level, Global access)"
+  description = "Confluent Cloud API Key (EnvironmentAdmin Service Account key or Cloud API key)"
   type        = string
   sensitive   = true
 }
@@ -10,10 +10,9 @@ variable "api_secret" {
   sensitive   = true
 }
 
-variable "environment_name" {
-  description = "Name for your Confluent Cloud environment — make it unique (e.g. workshop-yourname)"
+variable "environment_id" {
+  description = "Confluent Cloud Environment ID of the persistent demo environment (e.g. env-abc123)"
   type        = string
-  default     = "workshop-lab"
 }
 
 variable "cluster_name" {
